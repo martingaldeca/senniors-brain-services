@@ -108,7 +108,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./docker/broker/rabbitmq.config:/etc/rabbitmq/rabbitmq.config
+      - ./docker/broker/rabbitmq_advanced.config:/etc/rabbitmq/advanced.config
 
   redis:
     image: redis:7-alpine
