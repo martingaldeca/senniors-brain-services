@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  brain_services:
+    container_name: ${PROJECT_NAME}_brain_services
+    hostname: src
+    restart: always
+    image: ${PROJECT_NAME}_brain_services_image
+    build:
+      context: .
+      dockerfile: docker/src/Dockerfile
+    command: sh /run_scripts/post_deploy.sh
+    volumes:
+      - ./src:/app/src
+      - vol_logs:/src/logs
+      - vol_data:/app/src/data
+    env_file:
+      - .env
+    ports:
+      - "${BRAIN_SERVICES_PORT}:${BRAIN_SERVICES_PORT}"
+    links:
+      - broker
+      - redis
+    depends_on:
+      - broker
+      - redis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 50m
+        max-file: "2"
+
+  worker:
+    container_name: ${PROJECT_NAME}_worker
+    hostname: worker
+    image: ${PROJECT_NAME}_brain_services_image
+    restart: always
+    env_file:
+      - .env
+    environment:
+      WORKER_NAME: default_worker
+      WORKER_QUEUES: default
+    command: sh /run_scripts/run_worker.sh
+    volumes:
+      - ./src:/app/src
+      - vol_logs:/src/logs
+      - vol_data:/app/src/data
+    depends_on:
+      - brain_services
+      - broker
+      - redis
+    links:
+      - broker
+      - redis
+
+  beat:
+    container_name: ${PROJECT_NAME}_beat
+    hostname: beat
+    image: ${PROJECT_NAME}_brain_services_image
+    restart: always
+    env_file:
+      - .env
+    environment:
+      WORKER_NAME: beat_worker
+      WORKER_QUEUES: default
+    command: sh /run_scripts/run_beat.sh
+    volumes:
+      - ./src:/app/src
+      - vol_logs:/src/logs
+      - vol_data:/app/src/data
+    depends_on:
+      - broker
+      - worker
+      - redis
+    links:
+      - broker
+      - redis
+
+  flower:
+    image: ${PROJECT_NAME}_brain_services_image
+    container_name: ${PROJECT_NAME}_flower
+    hostname: flower
+    restart: always
+    env_file:
+      - .env
+    environment:
+      FLOWER_BROKER: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@broker:${BROKER_PORT}
+    depends_on:
+      - brain_services
+      - worker
+      - beat
+      - broker
+      - redis
+    links:
+      - brain_services
+      - broker
+      - redis
+    command: sh /run_scripts/run_flower.sh
+    volumes:
+      - ./src:/app/src
+      - vol_logs:/src/logs
+      - vol_data:/app/src/data
+
+  broker:
+    hostname: broker
+    container_name: ${PROJECT_NAME}_broker
+    image: rabbitmq:3-alpine
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME}_redis
+    env_file:
+      - .env
+    volumes:
+      - vol_redis:/var/lib/redis
+
+volumes:
+  vol_logs:
+    driver: local
+  vol_data:
+    driver: local
+  vol_redis:
+    driver: local
