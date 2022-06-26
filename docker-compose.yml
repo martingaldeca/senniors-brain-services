@@ -104,11 +104,11 @@ services:
   broker:
     hostname: broker
     container_name: ${PROJECT_NAME}_broker
-    image: rabbitmq:3-alpine
+    image: rabbitmq:3.8.34
     env_file:
       - .env
     volumes:
-      - ./docker/broker/rabbitmq.conf:/etc/rabbitmq/rabbitmq.config
+      - ./docker/broker/rabbitmq.config:/etc/rabbitmq/rabbitmq.config
 
   redis:
     image: redis:7-alpine
