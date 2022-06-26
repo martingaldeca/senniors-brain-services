@@ -102,6 +102,17 @@ or
 docker exec senniors_brain_services python -m pytest --log-cli-level=ERROR --disable-pytest-warnings
 ```
 
+## Swagger
+You can check the api documentation in the following endpoints:
+* `/senniors_brain_services_documentation`
+* `/senniors_brain_services_redoc`
+
+You can change the endpoints updating the following env variables:
+* `DOCS_URL`
+* `REDOC_URL`
+
+If you set the env values to 'None', the documentation wil be hidden (this is recommended for production environments) 
+
 ## Next steps
 
 * First we should create a CI/CD, maybe with jenkins and a Jenkinsfile, that pass all the tests if needed and deploy the
