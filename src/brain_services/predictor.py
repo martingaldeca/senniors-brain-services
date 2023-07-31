@@ -44,5 +44,4 @@ class SenniorsPredictor:
             )
             raise ex
         logger.debug(f'The prediction was "{prediction}", input data was "{x}"')
-        attending = prediction[0] == 'No'
-        return attending
+        return prediction[0] == 'No'
